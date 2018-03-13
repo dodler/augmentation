@@ -7,6 +7,7 @@ import cv2
 import os
 import os.path as osp
 import random
+import argparse
 
 
 # In[6]:
@@ -18,7 +19,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-img1 = np.load('test.npy')
+img = np.load('test.npy')
 
 def rotateImage(image, angle):
     image_center = tuple(np.array(image.shape[1::-1]) / 2)
@@ -60,11 +61,17 @@ def changeBrightness(image, value, prob):
 #np.save('test.npy', img)
 
 
-import argparse
 parser = argparse.ArgumentParser(description='Awesome augmentator 0.0.1')
-parser.add_argument('n',type=int, help='Number to augmentate')
-parser.add_argument('a',type=int, help='Angle for rotation')
-parser.add_argument('v',type=int, help='Value for brightness increase')
-parser.add_argument('sa', type=bool, help='sa - Stohastic angle, with a as maximum angle')
-parser.add_argument('sv', type=bool, help='sv - Stohastic value, with v as maximum value')
+parser.add_argument('n',type=int, help='Number to augmentate', default=10)
+parser.add_argument('a',type=int, help='Angle for rotation', default=10)
+parser.add_argument('v',type=int, help='Value for brightness increase', default=20)
+parser.add_argument('pa', type=int, help='Image will be rotated with probability > pa', default=0.3)
+parser.add_argument('pv',type=int, help='Image will be saturated with probability > pv', default=0.3)
+parser.add_argument('sa', type=bool, help='sa - Stohastic angle, with a as maximum angle', default=False)
+parser.add_argument('sv', type=bool, help='sv - Stohastic value, with v as maximum value', default=False)
 
+args = parser.parse_args()
+
+for i in range(args.n):
+    aug = rotateImageWithProb(changeBrightness(img, args.v, args.pv), args.a, args.pa)
+    np.save('out_' + str(i) + '.npy', aug)

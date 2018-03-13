@@ -32,7 +32,8 @@ def rotateImage(image, angle):
 
 def rotateImageWithProb(image, angle, prob):
     if random.random() > prob:
-        return rotateImage(image, angle)
+        ang = random.randint(0,angle)
+        return rotateImage(image, ang)
     else:
         return image
 
@@ -43,10 +44,12 @@ def changeBrightness(image, value, prob):
     if random.random() > prob:
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) #convert it to hsv
 
+        inc = random.randint(0,value)
+
         h, s, v = cv2.split(hsv)
-        lim = 255 - value
+        lim = 255 - inc
         v[v > lim] = 255
-        v[v <= lim] += value
+        v[v <= lim] += inc
         final_hsv = cv2.merge((h, s, v))
 
         img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
@@ -62,16 +65,18 @@ def changeBrightness(image, value, prob):
 
 
 parser = argparse.ArgumentParser(description='Awesome augmentator 0.0.1')
-parser.add_argument('n',type=int, help='Number to augmentate', default=10)
-parser.add_argument('a',type=int, help='Angle for rotation', default=10)
-parser.add_argument('v',type=int, help='Value for brightness increase', default=20)
-parser.add_argument('pa', type=int, help='Image will be rotated with probability > pa', default=0.3)
-parser.add_argument('pv',type=int, help='Image will be saturated with probability > pv', default=0.3)
-parser.add_argument('sa', type=bool, help='sa - Stohastic angle, with a as maximum angle', default=False)
-parser.add_argument('sv', type=bool, help='sv - Stohastic value, with v as maximum value', default=False)
+parser.add_argument('n', help='Number to augmentate', type=int, default=10, action='store')
+parser.add_argument('a', help='Angle for rotation', type=int, default=10, action='store')
+parser.add_argument('v', help='Value for brightness increase', type=int, default=20,  action='store')
+parser.add_argument('pa', help='Image will be rotated with probability > pa',type=float,  default=0.3,  action='store')
+parser.add_argument('pv', help='Image will be saturated with probability > pv', type=float, default=0.3, action='store')
 
 args = parser.parse_args()
 
-for i in range(args.n):
+print(args)
+
+for i in range(int(args.n)):
+    print('handling ',i)
     aug = rotateImageWithProb(changeBrightness(img, args.v, args.pv), args.a, args.pa)
+    cv2.imwrite('out' + str(i) + '.jpeg', aug)
     np.save('out_' + str(i) + '.npy', aug)

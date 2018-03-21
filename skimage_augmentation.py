@@ -27,7 +27,7 @@ class BatchTransform(object):
         else:
             self._gamma_tr = None
         if angle != -1:
-            self._angle_tr = RandomRotation(angle, prob)
+            self._angle_tr = Dim2RandomRotation(angle, prob)
         else:
             self._angle_tr = None
 
@@ -51,6 +51,30 @@ class BatchTransform(object):
                 img_cpy[cnt,:],msk_cpy[cnt,:] = self._gamma_tr(img_cpy[cnt,:],msk_cpy[cnt,:])
 
         return img_cpy, msk_cpy
+
+class Dim2RandomRotation(object):
+    def __init__(self, angle, prob):
+        self._angle = angle
+        self._prob = prob
+
+    def __call__(self, image, mask):
+        assert mask.shape[2] == 2
+        rangle = random.uniform(-self._angle,self._angle)
+        if random.random() > self._prob:
+            rimg = T.rotate(image, rangle)
+
+            rmask = T.rotate(mask[:,:,0], rangle)
+            rbg = T.rotate(mask[:,:,1],rangle)
+
+            xor_bg = np.logical_xor(rmask, rbg)
+            rbg[xor_bg == 0] = 1
+            rbg[rmask == 0] = 1
+            comp = np.dstack((rmask,rbg))
+ 
+            return rimg, comp
+        else:
+            return image, mask
+
 
 class RandomRotation(object):
     def __init__(self, angle, prob):

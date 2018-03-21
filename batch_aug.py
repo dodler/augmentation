@@ -22,14 +22,22 @@ print(files)
 imgs = []
 masks = []
 
-target_shape = (128,128)
+dsize=512
+target_shape = (dsize,dsize)
 
 imgs.copy()
 
 
 for i in range(0,8):
     imgs.append(resize(imread(osp.join(source, 'img',files[i])), target_shape))
-    masks.append(resize(imread(osp.join(source, 'mask',files[i])), target_shape))
+    m = resize(imread(osp.join(source, 'mask',files[i])), target_shape)
+    m = rgb2gray(m).reshape((dsize,dsize,1))
+    m[m > 0] = 1
+    bg = m.copy()
+    bg[bg==0] = 2
+    bg[bg==1]=0
+    bg[bg==2]=1
+    masks.append(np.dstack((m,bg)))
 
 imgs = np.array(imgs)
 masks = np.array(masks)
@@ -42,4 +50,5 @@ imgs,masks = bt(imgs, masks, (512,512))
 
 for i in range(0,8):
     imsave(osp.join(target, 'img','out' + str(i) + '.jpg'), imgs[i])
-    imsave(osp.join(target, 'mask','out' + str(i) + '.jpg'), masks[i])
+    imsave(osp.join(target, 'mask','out_m' + str(i) + '.jpg'), masks[i,:,:,0])
+    imsave(osp.join(target, 'mask','out_bg' + str(i) + '.jpg'), masks[i,:,:,1])

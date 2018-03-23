@@ -1,16 +1,10 @@
-import cv2
-import os
-import os.path as osp
 import random
-import argparse
 
 random.seed(42)
 
 # In[6]:
 
 import numpy as np
-import matplotlib.pyplot as plt
-import time
 
 import skimage.transform as T
 import skimage.exposure as E
@@ -18,6 +12,9 @@ import skimage.exposure as E
 
 class BatchTransform(object):
     def __init__(self, prob, gamma=-1, angle=-1):
+        self._hflip = DoRandom(prob, HorizontalFlip())
+        self._vflip = DoRandom(prob, VerticalFlip())
+
         self._prob = prob
         self._gamma = gamma
         self._angle = angle
@@ -48,12 +45,37 @@ class BatchTransform(object):
             msk_cpy = mask_batch
 
         for cnt in range(blen):
+            img_cpy[cnt, :], msk_cpy[cnt, :] = self._hflip(img_cpy[cnt, :], msk_cpy[cnt, :])
+            img_cpy[cnt, :], msk_cpy[cnt, :] = self._vflip(img_cpy[cnt, :], msk_cpy[cnt, :])
+
             if self._angle_tr is not None:
                 img_cpy[cnt, :], msk_cpy[cnt, :] = self._angle_tr(img_cpy[cnt, :], msk_cpy[cnt, :])
             if self._gamma_tr is not None:
                 img_cpy[cnt, :], msk_cpy[cnt, :] = self._gamma_tr(img_cpy[cnt, :], msk_cpy[cnt, :])
 
         return img_cpy, msk_cpy
+
+
+class VerticalFlip(object):
+    def __call__(self, image, mask):
+        return image[::-1, :], mask[::-1, :]
+
+
+class HorizontalFlip(object):
+    def __call__(self, image, mask):
+        return image[:, ::-1], mask[:, ::-1]
+
+
+class DoRandom(object):
+    def __init__(self, prob, transform):
+        self._prob = prob
+        self._transform = transform
+
+    def __call__(self, image, mask):
+        if random.random() > self._prob:
+            return self._transform(image, mask)
+        else:
+            return image, mask
 
 
 class Dim2RandomRotation(object):

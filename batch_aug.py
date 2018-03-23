@@ -22,7 +22,7 @@ print(files)
 imgs = []
 masks = []
 
-dsize=512
+dsize=1024
 target_shape = (dsize,dsize)
 
 imgs.copy()
